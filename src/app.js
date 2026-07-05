@@ -3,11 +3,15 @@ import noteRoutes from "./routes/note.route.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import cors from "cors";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+
+// CORS middleware
+app.use(cors());
 
 app.use(express.json());
 

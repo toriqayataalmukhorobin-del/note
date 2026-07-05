@@ -1,61 +1,30 @@
-import initSqlJs from 'sql.js';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+dotenv.config();
 
-let db;
-const dbPath = path.join(__dirname, '../../notes.db');
+const pool = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'notes_api',
+    port: process.env.DB_PORT || 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
 
-// Initialize SQLite database
-const initDatabase = async () => {
+// Test koneksi database
+const testConnection = async () => {
     try {
-        const SQL = await initSqlJs();
-        
-        // Load existing database or create new one
-        let dbData;
-        if (fs.existsSync(dbPath)) {
-            dbData = fs.readFileSync(dbPath);
-            db = new SQL.Database(dbData);
-            console.log('✅ Database loaded from file');
-        } else {
-            db = new SQL.Database();
-            // Create table
-            db.run(`
-                CREATE TABLE IF NOT EXISTS notes (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    title TEXT NOT NULL,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            `);
-            // Insert dummy data
-            db.run("INSERT INTO notes (title) VALUES ('Belajar Express')");
-            db.run("INSERT INTO notes (title) VALUES ('Belajar Node.js')");
-            
-            // Save to file
-            saveDatabase();
-            console.log('✅ Database created with dummy data');
-        }
+        const connection = await pool.getConnection();
+        console.log('✅ Database connected successfully');
+        connection.release();
     } catch (error) {
-        console.error('❌ Database initialization failed:', error.message);
+        console.error('❌ Database connection failed:', error.message);
     }
 };
 
-// Save database to file
-const saveDatabase = () => {
-    try {
-        const data = db.export();
-        const buffer = Buffer.from(data);
-        fs.writeFileSync(dbPath, buffer);
-    } catch (error) {
-        console.error('❌ Failed to save database:', error.message);
-    }
-};
+testConnection();
 
-// Initialize database
-await initDatabase();
-
-export { db, saveDatabase };
+export default pool;

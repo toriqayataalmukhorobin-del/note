@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/notes';
+const API_URL = '/notes';
 let editModal, deleteModal;
 
 // Initialize modals when DOM is loaded
